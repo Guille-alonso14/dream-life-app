@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initAuth, saveScenario, subscribeScenarios, deleteScenario } from './firebase';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const globalStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
@@ -76,6 +77,13 @@ function App() {
   const netNeeded = totalPct < 1 ? base / (1 - totalPct) : base * 2;
   const grossAnnual = (netNeeded * 12) / 0.75;
 
+  const chartData = [
+    { name: 'Gastos fijos', value: Math.round(totalExpenses), color: '#2a6049' },
+    { name: 'Estilo de vida', value: Math.round(lifestyleExtra + extrasTotal), color: '#b07d3a' },
+    { name: 'Ahorro', value: Math.round(netNeeded * savingsPct / 100), color: '#6ba88a' },
+    { name: 'Inversión', value: Math.round(netNeeded * investPct / 100), color: '#7b6fca' },
+  ].filter(d => d.value > 0);
+
   const toggleExtra = (id: string) => {
     setActiveExtras(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -85,11 +93,7 @@ function App() {
   async function handleSave() {
     if (!uid || !scenarioName.trim()) return;
     await saveScenario(uid, scenarioName, {
-      expenses,
-      savingsPct,
-      investPct,
-      lifestyle,
-      activeExtras,
+      expenses, savingsPct, investPct, lifestyle, activeExtras,
       grossAnnual: Math.round(grossAnnual),
       netNeeded: Math.round(netNeeded),
     });
@@ -103,7 +107,7 @@ function App() {
 
       {/* Header */}
       <div style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 36, marginBottom: 8, color: '#1a1814' }}>Dream Life Calculator</h1>
+        <h1 style={{ fontSize: 36, marginBottom: 8 }}>Dream Life Calculator</h1>
         <p style={{ color: '#6b6760', fontSize: 16, fontWeight: 300 }}>
           Calcula el salario que necesitas para vivir tu mejor vida
         </p>
@@ -111,7 +115,7 @@ function App() {
 
       {/* Gastos */}
       <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1814' }}>Gastos mensuales</h2>
+        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Gastos mensuales</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {Object.keys(expenses).map((key) => (
             <div key={key}>
@@ -127,8 +131,7 @@ function App() {
                   style={{
                     width: '100%', padding: '10px 10px 10px 24px',
                     border: '1px solid #e8e5e0', borderRadius: 10,
-                    fontSize: 15, color: '#1a1814', background: '#f7f5f0',
-                    outline: 'none',
+                    fontSize: 15, color: '#1a1814', background: '#f7f5f0', outline: 'none',
                   }}
                 />
               </div>
@@ -139,7 +142,7 @@ function App() {
 
       {/* Sliders */}
       <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 24, color: '#1a1814' }}>Objetivos financieros</h2>
+        <h2 style={{ fontSize: 20, marginBottom: 24 }}>Objetivos financieros</h2>
         {[
           { label: 'Ahorro mensual', value: savingsPct, set: setSavingsPct, max: 40, sub: fmt(netNeeded * savingsPct / 100) + '/mes' },
           { label: 'Inversión mensual', value: investPct, set: setInvestPct, max: 30, sub: fmt(netNeeded * investPct / 100) + '/mes' },
@@ -162,7 +165,7 @@ function App() {
 
       {/* Estilo de vida */}
       <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1814' }}>Estilo de vida</h2>
+        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Estilo de vida</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
           {(Object.entries(LIFESTYLE_LEVELS) as any[]).map(([key, lvl]) => (
             <button
@@ -227,6 +230,42 @@ function App() {
         </button>
       </div>
 
+      {/* Gráfica */}
+      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <h2 style={{ fontSize: 20, marginBottom: 24 }}>Distribución del salario neto</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'center' }}>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={3}
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={index} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: any) => fmt(Number(value))} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {chartData.map((item) => (
+              <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 12, height: 12, borderRadius: 3, background: item.color, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: '#6b6760' }}>{item.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 500 }}>{fmt(item.value)}/mes</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Modal guardar */}
       {showSave && (
         <div style={{
@@ -281,8 +320,8 @@ function App() {
 
       {/* Lista de escenarios */}
       {scenarios.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1814' }}>Escenarios guardados</h2>
+        <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <h2 style={{ fontSize: 20, marginBottom: 20 }}>Escenarios guardados</h2>
           {scenarios.map((s) => (
             <div key={s.id} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',

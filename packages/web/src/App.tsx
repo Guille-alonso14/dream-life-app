@@ -123,187 +123,255 @@ function App() {
   }
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '2rem' }}>
+    <div style={{ minHeight: '100vh' }}>
       <style>{globalStyle}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
+      <div style={{
+        background: 'white', borderBottom: '1px solid #e8e5e0',
+        position: 'sticky', top: 0, zIndex: 50,
+        padding: '0 2rem',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+            <h1 style={{ fontSize: 22, color: '#2a6049' }}>Dream Life</h1>
+            <span style={{ fontSize: 13, color: '#a09d98', fontWeight: 300 }}>Calculadora de salario ideal</span>
+          </div>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: '7px 16px', borderRadius: 999, border: '1px solid #e8e5e0',
+              background: 'transparent', color: '#6b6760', fontSize: 13, cursor: 'pointer',
+            }}
+          >
+            ↺ Restablecer
+          </button>
+        </div>
+      </div>
+
+      {/* Layout dos columnas */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
+
+        {/* Columna izquierda — formulario */}
         <div>
-          <h1 style={{ fontSize: 36, marginBottom: 8 }}>Dream Life Calculator</h1>
-          <p style={{ color: '#6b6760', fontSize: 16, fontWeight: 300 }}>
-            Calcula el salario que necesitas para vivir tu mejor vida
-          </p>
-        </div>
-        <button
-          onClick={handleReset}
-          style={{
-            padding: '8px 18px', borderRadius: 999, border: '1px solid #e8e5e0',
-            background: 'transparent', color: '#6b6760', fontSize: 13, cursor: 'pointer',
-          }}
-        >
-          ↺ Restablecer
-        </button>
-      </div>
 
-      {/* Gastos */}
-      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Gastos mensuales</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {Object.keys(expenses).map((key) => (
-            <div key={key}>
-              <label style={{ fontSize: 12, color: '#a09d98', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                {LABELS[key]}
-              </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#a09d98', fontSize: 14 }}>€</span>
-                <input
-                  type="number"
-                  value={expenses[key as keyof typeof expenses]}
-                  onChange={(e) => setExpenses(prev => ({ ...prev, [key]: Number(e.target.value) }))}
-                  style={{
-                    width: '100%', padding: '10px 10px 10px 24px',
-                    border: '1px solid #e8e5e0', borderRadius: 10,
-                    fontSize: 15, color: '#1a1814', background: '#f7f5f0', outline: 'none',
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Objetivos financieros */}
-      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 24 }}>Objetivos financieros</h2>
-
-        {[
-          { label: 'Ahorro mensual', value: savingsPct, set: setSavingsPct, max: 40, sub: fmt(netNeeded * savingsPct / 100) + '/mes' },
-          { label: 'Inversión mensual', value: investPct, set: setInvestPct, max: 30, sub: fmt(netNeeded * investPct / 100) + '/mes' },
-        ].map(({ label, value, set, max, sub }) => (
-          <div key={label} style={{ marginBottom: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div>
-                <span style={{ fontSize: 15 }}>{label}</span>
-                <span style={{ fontSize: 12, color: '#a09d98', marginLeft: 8 }}>{sub}</span>
-              </div>
-              <span style={{ fontWeight: 500, color: '#2a6049', fontSize: 16 }}>{value}%</span>
-            </div>
-            <input type="range" min={0} max={max} step={1} value={value} onChange={(e) => set(Number(e.target.value))} />
-          </div>
-        ))}
-
-        {/* Fondo de emergencia */}
-        <div style={{ borderTop: '1px solid #f0ede8', paddingTop: 20, marginTop: 4 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div>
-              <span style={{ fontSize: 15 }}>Fondo de emergencia</span>
-              <span style={{ fontSize: 12, color: '#a09d98', marginLeft: 8 }}>{fmt(emergencyTarget)} objetivo</span>
-            </div>
-            <span style={{ fontWeight: 500, color: '#b07d3a', fontSize: 16 }}>{emergencyMonths} meses</span>
-          </div>
-          <input type="range" min={1} max={12} step={1} value={emergencyMonths} onChange={(e) => setEmergencyMonths(Number(e.target.value))}
-            style={{ accentColor: '#b07d3a' } as any}
-          />
-          {monthsToEmergency && (
-            <p style={{ fontSize: 12, color: '#a09d98', marginTop: 6 }}>
-              A este ritmo de ahorro lo conseguirías en <strong style={{ color: '#b07d3a' }}>{monthsToEmergency} meses</strong>
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Estilo de vida */}
-      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Estilo de vida</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
-          {(Object.entries(LIFESTYLE_LEVELS) as any[]).map(([key, lvl]) => (
-            <button
-              key={key}
-              onClick={() => setLifestyle(key)}
-              style={{
-                padding: '16px 12px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
-                border: lifestyle === key ? '2px solid #2a6049' : '1px solid #e8e5e0',
-                background: lifestyle === key ? '#eaf4ef' : '#f7f5f0',
-                transition: 'all 0.15s',
-              }}
-            >
-              <div style={{ fontSize: 22, marginBottom: 4 }}>{lvl.icon}</div>
-              <div style={{ fontWeight: 500, fontSize: 13, color: '#1a1814', marginBottom: 2 }}>{lvl.label}</div>
-              <div style={{ fontSize: 11, color: '#a09d98' }}>{lvl.extra === 0 ? 'Sin extra' : `+€${lvl.extra}/mes`}</div>
-              <div style={{ fontSize: 10, color: '#6b6760', marginTop: 4 }}>{lvl.description}</div>
-            </button>
-          ))}
-        </div>
-
-        <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 12, fontWeight: 500 }}>Extras que quiero incluir</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {EXTRAS.map((extra) => (
-            <button
-              key={extra.id}
-              onClick={() => toggleExtra(extra.id)}
-              style={{
-                padding: '7px 16px', borderRadius: 999, fontSize: 13, cursor: 'pointer',
-                border: activeExtras.includes(extra.id) ? '1px solid #2a6049' : '1px solid #e8e5e0',
-                background: activeExtras.includes(extra.id) ? '#eaf4ef' : 'transparent',
-                color: activeExtras.includes(extra.id) ? '#2a6049' : '#6b6760',
-                transition: 'all 0.15s',
-              }}
-            >
-              {extra.emoji} {extra.label} <span style={{ opacity: 0.6 }}>+€{extra.amount}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Resultado */}
-      <div style={{ background: '#2a6049', borderRadius: 20, padding: 36, color: 'white', textAlign: 'center', marginBottom: 20, boxShadow: '0 4px 20px rgba(42,96,73,0.25)' }}>
-        <p style={{ fontSize: 11, opacity: 0.65, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-          Salario bruto anual necesario
-        </p>
-        <p style={{ fontSize: 52, fontFamily: 'DM Serif Display, Georgia, serif', marginBottom: 8, letterSpacing: '-0.02em' }}>
-          {fmt(grossAnnual)}
-        </p>
-        <p style={{ opacity: 0.7, fontSize: 15, marginBottom: 24 }}>
-          {fmt(netNeeded)}/mes neto · {fmt(base)}/mes en gastos
-        </p>
-        <button
-          onClick={() => setShowSave(true)}
-          style={{
-            padding: '12px 28px', borderRadius: 999,
-            background: 'white', color: '#2a6049', border: 'none',
-            fontWeight: 500, fontSize: 14, cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-          }}
-        >
-          Guardar escenario →
-        </button>
-      </div>
-
-      {/* Gráfica distribución */}
-      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: 20, marginBottom: 24 }}>Distribución del salario neto</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'center' }}>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
-                {chartData.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: any) => fmt(Number(value))} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {chartData.map((item) => (
-              <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: item.color, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#6b6760' }}>{item.name}</div>
-                  <div style={{ fontSize: 15, fontWeight: 500 }}>{fmt(item.value)}/mes</div>
+          {/* Gastos */}
+          <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <h2 style={{ fontSize: 20, marginBottom: 20 }}>Gastos mensuales</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {Object.keys(expenses).map((key) => (
+                <div key={key}>
+                  <label style={{ fontSize: 12, color: '#a09d98', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {LABELS[key]}
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#a09d98', fontSize: 14 }}>€</span>
+                    <input
+                      type="number"
+                      value={expenses[key as keyof typeof expenses]}
+                      onChange={(e) => setExpenses(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                      style={{
+                        width: '100%', padding: '10px 10px 10px 24px',
+                        border: '1px solid #e8e5e0', borderRadius: 10,
+                        fontSize: 15, color: '#1a1814', background: '#f7f5f0', outline: 'none',
+                      }}
+                    />
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Objetivos */}
+          <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <h2 style={{ fontSize: 20, marginBottom: 24 }}>Objetivos financieros</h2>
+            {[
+              { label: 'Ahorro mensual', value: savingsPct, set: setSavingsPct, max: 40, sub: fmt(netNeeded * savingsPct / 100) + '/mes' },
+              { label: 'Inversión mensual', value: investPct, set: setInvestPct, max: 30, sub: fmt(netNeeded * investPct / 100) + '/mes' },
+            ].map(({ label, value, set, max, sub }) => (
+              <div key={label} style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div>
+                    <span style={{ fontSize: 15 }}>{label}</span>
+                    <span style={{ fontSize: 12, color: '#a09d98', marginLeft: 8 }}>{sub}</span>
+                  </div>
+                  <span style={{ fontWeight: 500, color: '#2a6049', fontSize: 16 }}>{value}%</span>
+                </div>
+                <input type="range" min={0} max={max} step={1} value={value} onChange={(e) => set(Number(e.target.value))} />
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid #f0ede8', paddingTop: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div>
+                  <span style={{ fontSize: 15 }}>Fondo de emergencia</span>
+                  <span style={{ fontSize: 12, color: '#a09d98', marginLeft: 8 }}>{fmt(emergencyTarget)} objetivo</span>
+                </div>
+                <span style={{ fontWeight: 500, color: '#b07d3a', fontSize: 16 }}>{emergencyMonths} meses</span>
+              </div>
+              <input type="range" min={1} max={12} step={1} value={emergencyMonths} onChange={(e) => setEmergencyMonths(Number(e.target.value))} />
+              {monthsToEmergency && (
+                <p style={{ fontSize: 12, color: '#a09d98', marginTop: 6 }}>
+                  A este ritmo lo conseguirías en <strong style={{ color: '#b07d3a' }}>{monthsToEmergency} meses</strong>
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Estilo de vida */}
+          <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <h2 style={{ fontSize: 20, marginBottom: 20 }}>Estilo de vida</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
+              {(Object.entries(LIFESTYLE_LEVELS) as any[]).map(([key, lvl]) => (
+                <button
+                  key={key}
+                  onClick={() => setLifestyle(key)}
+                  style={{
+                    padding: '16px 12px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
+                    border: lifestyle === key ? '2px solid #2a6049' : '1px solid #e8e5e0',
+                    background: lifestyle === key ? '#eaf4ef' : '#f7f5f0',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>{lvl.icon}</div>
+                  <div style={{ fontWeight: 500, fontSize: 13, color: '#1a1814', marginBottom: 2 }}>{lvl.label}</div>
+                  <div style={{ fontSize: 11, color: '#a09d98' }}>{lvl.extra === 0 ? 'Sin extra' : `+€${lvl.extra}/mes`}</div>
+                  <div style={{ fontSize: 10, color: '#6b6760', marginTop: 4 }}>{lvl.description}</div>
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 12, fontWeight: 500 }}>Extras que quiero incluir</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {EXTRAS.map((extra) => (
+                <button
+                  key={extra.id}
+                  onClick={() => toggleExtra(extra.id)}
+                  style={{
+                    padding: '7px 16px', borderRadius: 999, fontSize: 13, cursor: 'pointer',
+                    border: activeExtras.includes(extra.id) ? '1px solid #2a6049' : '1px solid #e8e5e0',
+                    background: activeExtras.includes(extra.id) ? '#eaf4ef' : 'transparent',
+                    color: activeExtras.includes(extra.id) ? '#2a6049' : '#6b6760',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {extra.emoji} {extra.label} <span style={{ opacity: 0.6 }}>+€{extra.amount}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gráfica */}
+          <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <h2 style={{ fontSize: 20, marginBottom: 24 }}>Distribución del salario neto</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'center' }}>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
+                    {chartData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: any) => fmt(Number(value))} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {chartData.map((item) => (
+                  <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: item.color, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: '#6b6760' }}>{item.name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 500 }}>{fmt(item.value)}/mes</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Comparativa */}
+          {scenarios.length >= 2 && (
+            <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+              <h2 style={{ fontSize: 20, marginBottom: 8 }}>Comparativa de escenarios</h2>
+              <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 24 }}>Salario bruto anual por escenario</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={compareData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0ede8" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b6760' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#6b6760' }} axisLine={false} tickLine={false} tickFormatter={(v) => '€' + (v / 1000) + 'k'} />
+                  <Tooltip formatter={(value: any) => [fmt(Number(value)), 'Bruto anual']} />
+                  <Bar dataKey="bruto" radius={[6, 6, 0, 0]}>
+                    {compareData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+        </div>
+
+        {/* Columna derecha — resultado fijo */}
+        <div style={{ position: 'sticky', top: 80 }}>
+
+          {/* Hero resultado */}
+          <div style={{ background: '#2a6049', borderRadius: 20, padding: 28, color: 'white', textAlign: 'center', marginBottom: 14, boxShadow: '0 4px 20px rgba(42,96,73,0.25)' }}>
+            <p style={{ fontSize: 11, opacity: 0.65, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              Salario bruto anual
+            </p>
+            <p style={{ fontSize: 44, fontFamily: 'DM Serif Display, Georgia, serif', marginBottom: 6, letterSpacing: '-0.02em' }}>
+              {fmt(grossAnnual)}
+            </p>
+            <p style={{ opacity: 0.7, fontSize: 14, marginBottom: 20 }}>
+              {fmt(netNeeded)}/mes neto
+            </p>
+            <button
+              onClick={() => setShowSave(true)}
+              style={{
+                padding: '10px 24px', borderRadius: 999,
+                background: 'white', color: '#2a6049', border: 'none',
+                fontWeight: 500, fontSize: 14, cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)', width: '100%',
+              }}
+            >
+              Guardar escenario →
+            </button>
+          </div>
+
+          {/* Métricas */}
+          <div style={{ background: 'white', borderRadius: 20, padding: 20, marginBottom: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            {[
+              { label: 'Gastos totales/mes', value: fmt(base), color: '#1a1814' },
+              { label: 'Ahorro mensual', value: fmt(savingsEur), color: '#2a6049' },
+              { label: 'Fondo emergencia', value: fmt(emergencyTarget), color: '#b07d3a' },
+              { label: 'Meses para lograrlo', value: monthsToEmergency ? `${monthsToEmergency} meses` : '—', color: '#b07d3a' },
+            ].map((m) => (
+              <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0ede8' }}>
+                <span style={{ fontSize: 13, color: '#6b6760' }}>{m.label}</span>
+                <span style={{ fontSize: 15, fontWeight: 500, color: m.color }}>{m.value}</span>
               </div>
             ))}
           </div>
+
+          {/* Escenarios guardados */}
+          {scenarios.length > 0 && (
+            <div style={{ background: 'white', borderRadius: 20, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+              <h3 style={{ fontSize: 16, marginBottom: 14 }}>Escenarios guardados</h3>
+              {scenarios.map((s) => (
+                <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0ede8' }}>
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 2 }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: '#6b6760' }}>{fmt(s.grossAnnual)}/año</div>
+                  </div>
+                  <button
+                    onClick={() => uid && deleteScenario(uid, s.id)}
+                    style={{ background: 'transparent', border: 'none', color: '#a09d98', cursor: 'pointer', fontSize: 12 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -358,54 +426,6 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* Lista de escenarios */}
-      {scenarios.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 20, marginBottom: 20 }}>Escenarios guardados</h2>
-          {scenarios.map((s) => (
-            <div key={s.id} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '16px 0', borderBottom: '1px solid #f0ede8',
-            }}>
-              <div>
-                <div style={{ fontWeight: 500, fontSize: 15, marginBottom: 3 }}>{s.name}</div>
-                <div style={{ fontSize: 13, color: '#6b6760' }}>
-                  {fmt(s.grossAnnual)}/año · {fmt(s.netNeeded)}/mes neto
-                </div>
-              </div>
-              <button
-                onClick={() => uid && deleteScenario(uid, s.id)}
-                style={{ background: 'transparent', border: 'none', color: '#a09d98', cursor: 'pointer', fontSize: 13 }}
-              >
-                Eliminar
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Comparativa */}
-      {scenarios.length >= 2 && (
-        <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Comparativa de escenarios</h2>
-          <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 24 }}>Salario bruto anual por escenario</p>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={compareData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0ede8" />
-              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b6760' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#6b6760' }} axisLine={false} tickLine={false} tickFormatter={(v) => '€' + (v / 1000) + 'k'} />
-              <Tooltip formatter={(value: any) => [fmt(Number(value)), 'Bruto anual']} />
-              <Bar dataKey="bruto" radius={[6, 6, 0, 0]}>
-                {compareData.map((entry, index) => (
-                  <Cell key={index} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
     </div>
   );
 }

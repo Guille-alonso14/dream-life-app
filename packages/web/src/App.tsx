@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { initAuth, saveScenario, subscribeScenarios, deleteScenario } from './firebase';
 
 const DEFAULT_EXPENSES = {
   housing: 1200,
@@ -41,6 +42,17 @@ function App() {
   const [investPct, setInvestPct] = useState(5);
   const [lifestyle, setLifestyle] = useState<keyof typeof LIFESTYLE_LEVELS>('balanced');
   const [activeExtras, setActiveExtras] = useState<string[]>([]);
+  const [uid, setUid] = useState<string | null>(null);
+  const [scenarios, setScenarios] = useState<any[]>([]);
+  const [scenarioName, setScenarioName] = useState('');
+  const [showSave, setShowSave] = useState(false);
+
+  useEffect(() => {
+    initAuth((userId) => {
+      setUid(userId);
+      subscribeScenarios(userId, setScenarios);
+    });
+  }, []);
 
   const totalExpenses = Object.values(expenses).reduce((s, v) => s + v, 0);
   const lifestyleExtra = LIFESTYLE_LEVELS[lifestyle].extra;
@@ -58,6 +70,21 @@ function App() {
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
   };
+
+  async function handleSave() {
+    if (!uid || !scenarioName.trim()) return;
+    await saveScenario(uid, scenarioName, {
+      expenses,
+      savingsPct,
+      investPct,
+      lifestyle,
+      activeExtras,
+      grossAnnual: Math.round(grossAnnual),
+      netNeeded: Math.round(netNeeded),
+    });
+    setScenarioName('');
+    setShowSave(false);
+  }
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem' }}>
@@ -149,7 +176,7 @@ function App() {
       </div>
 
       {/* Resultado */}
-      <div style={{ background: '#2a6049', borderRadius: 16, padding: 28, color: 'white', textAlign: 'center' }}>
+      <div style={{ background: '#2a6049', borderRadius: 16, padding: 28, color: 'white', textAlign: 'center', marginBottom: 20 }}>
         <p style={{ fontSize: 12, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
           Salario bruto anual necesario
         </p>
@@ -157,7 +184,75 @@ function App() {
           {fmt(grossAnnual)}
         </p>
         <p style={{ opacity: 0.7 }}>{fmt(netNeeded)}/mes neto · {fmt(base)}/mes en gastos</p>
+        <button
+          onClick={() => setShowSave(true)}
+          style={{
+            marginTop: 16, padding: '10px 24px', borderRadius: 999,
+            background: 'white', color: '#2a6049', border: 'none',
+            fontWeight: 500, fontSize: 14, cursor: 'pointer',
+          }}
+        >
+          Guardar escenario
+        </button>
       </div>
+
+      {/* Modal guardar */}
+      {showSave && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
+        }}>
+          <div style={{ background: 'white', borderRadius: 20, padding: 32, width: 400 }}>
+            <h2 style={{ fontSize: 22, marginBottom: 8 }}>Guardar escenario</h2>
+            <p style={{ color: '#6b6760', fontSize: 14, marginBottom: 20 }}>Ponle un nombre para identificarlo</p>
+            <input
+              type="text"
+              placeholder="Ej: Vida en Madrid sin coche"
+              value={scenarioName}
+              onChange={(e) => setScenarioName(e.target.value)}
+              style={{ width: '100%', padding: 12, border: '1px solid #e0ddd6', borderRadius: 10, fontSize: 15, marginBottom: 16 }}
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowSave(false)}
+                style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e0ddd6', background: 'transparent', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#2a6049', color: 'white', fontWeight: 500, cursor: 'pointer' }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de escenarios guardados */}
+      {scenarios.length > 0 && (
+        <div style={{ background: 'white', borderRadius: 16, padding: 24 }}>
+          <h2 style={{ fontSize: 20, marginBottom: 20 }}>Escenarios guardados</h2>
+          {scenarios.map((s) => (
+            <div key={s.id} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '14px 0', borderBottom: '1px solid #f0ede8',
+            }}>
+              <div>
+                <div style={{ fontWeight: 500 }}>{s.name}</div>
+                <div style={{ fontSize: 13, color: '#6b6760' }}>{fmt(s.grossAnnual)}/año · {fmt(s.netNeeded)}/mes</div>
+              </div>
+              <button
+                onClick={() => uid && deleteScenario(uid, s.id)}
+                style={{ background: 'transparent', border: 'none', color: '#a09d98', cursor: 'pointer', fontSize: 13 }}
+              >
+                Eliminar
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { initAuth, saveScenario, subscribeScenarios, deleteScenario } from './firebase';
 
+const globalStyle = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #f7f5f0; color: #1a1814; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #e0ddd6; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #2a6049; cursor: pointer; box-shadow: 0 0 0 3px #eaf4ef; }
+  input[type=range]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 5px #d0e9df; }
+  button { font-family: 'DM Sans', sans-serif; }
+`;
+
 const DEFAULT_EXPENSES = {
   housing: 1200,
   food: 400,
@@ -87,26 +98,38 @@ function App() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem' }}>
-      <h1 style={{ fontSize: 32, marginBottom: 8 }}>Dream Life Calculator</h1>
-      <p style={{ color: '#6b6760', marginBottom: 32 }}>Calcula el salario que necesitas para vivir tu mejor vida</p>
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '2rem' }}>
+      <style>{globalStyle}</style>
+
+      {/* Header */}
+      <div style={{ marginBottom: 40 }}>
+        <h1 style={{ fontSize: 36, marginBottom: 8, color: '#1a1814' }}>Dream Life Calculator</h1>
+        <p style={{ color: '#6b6760', fontSize: 16, fontWeight: 300 }}>
+          Calcula el salario que necesitas para vivir tu mejor vida
+        </p>
+      </div>
 
       {/* Gastos */}
-      <div style={{ background: 'white', borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Gastos mensuales</h2>
+      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1814' }}>Gastos mensuales</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {Object.keys(expenses).map((key) => (
             <div key={key}>
-              <label style={{ fontSize: 12, color: '#a09d98', display: 'block', marginBottom: 4 }}>
+              <label style={{ fontSize: 12, color: '#a09d98', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {LABELS[key]}
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ color: '#a09d98' }}>€</span>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#a09d98', fontSize: 14 }}>€</span>
                 <input
                   type="number"
                   value={expenses[key as keyof typeof expenses]}
                   onChange={(e) => setExpenses(prev => ({ ...prev, [key]: Number(e.target.value) }))}
-                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #e0ddd6', borderRadius: 8, fontSize: 15 }}
+                  style={{
+                    width: '100%', padding: '10px 10px 10px 24px',
+                    border: '1px solid #e8e5e0', borderRadius: 10,
+                    fontSize: 15, color: '#1a1814', background: '#f7f5f0',
+                    outline: 'none',
+                  }}
                 />
               </div>
             </div>
@@ -115,84 +138,92 @@ function App() {
       </div>
 
       {/* Sliders */}
-      <div style={{ background: 'white', borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Objetivos financieros</h2>
+      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <h2 style={{ fontSize: 20, marginBottom: 24, color: '#1a1814' }}>Objetivos financieros</h2>
         {[
-          { label: 'Ahorro mensual', value: savingsPct, set: setSavingsPct, max: 40 },
-          { label: 'Inversión mensual', value: investPct, set: setInvestPct, max: 30 },
-        ].map(({ label, value, set, max }) => (
-          <div key={label} style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span>{label}</span>
-              <span style={{ fontWeight: 500, color: '#2a6049' }}>{value}%</span>
+          { label: 'Ahorro mensual', value: savingsPct, set: setSavingsPct, max: 40, sub: fmt(netNeeded * savingsPct / 100) + '/mes' },
+          { label: 'Inversión mensual', value: investPct, set: setInvestPct, max: 30, sub: fmt(netNeeded * investPct / 100) + '/mes' },
+        ].map(({ label, value, set, max, sub }) => (
+          <div key={label} style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <div>
+                <span style={{ fontSize: 15 }}>{label}</span>
+                <span style={{ fontSize: 12, color: '#a09d98', marginLeft: 8 }}>{sub}</span>
+              </div>
+              <span style={{ fontWeight: 500, color: '#2a6049', fontSize: 16 }}>{value}%</span>
             </div>
             <input
               type="range" min={0} max={max} step={1} value={value}
               onChange={(e) => set(Number(e.target.value))}
-              style={{ width: '100%' }}
             />
           </div>
         ))}
       </div>
 
       {/* Estilo de vida */}
-      <div style={{ background: 'white', borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 20 }}>Estilo de vida</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
+      <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1814' }}>Estilo de vida</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
           {(Object.entries(LIFESTYLE_LEVELS) as any[]).map(([key, lvl]) => (
             <button
               key={key}
               onClick={() => setLifestyle(key)}
               style={{
-                padding: 16, borderRadius: 12, cursor: 'pointer', textAlign: 'center',
-                border: lifestyle === key ? '2px solid #2a6049' : '1px solid #e0ddd6',
+                padding: '16px 12px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
+                border: lifestyle === key ? '2px solid #2a6049' : '1px solid #e8e5e0',
                 background: lifestyle === key ? '#eaf4ef' : '#f7f5f0',
+                transition: 'all 0.15s',
               }}
             >
-              <div style={{ fontSize: 20 }}>{lvl.icon}</div>
-              <div style={{ fontWeight: 500, fontSize: 13 }}>{lvl.label}</div>
-              <div style={{ fontSize: 11, color: '#a09d98' }}>{lvl.extra === 0 ? '—' : `+€${lvl.extra}`}</div>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>{lvl.icon}</div>
+              <div style={{ fontWeight: 500, fontSize: 13, color: '#1a1814', marginBottom: 2 }}>{lvl.label}</div>
+              <div style={{ fontSize: 11, color: '#a09d98' }}>{lvl.extra === 0 ? 'Sin extra' : `+€${lvl.extra}/mes`}</div>
+              <div style={{ fontSize: 10, color: '#6b6760', marginTop: 4 }}>{lvl.description}</div>
             </button>
           ))}
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 12 }}>Extras que quiero incluir</p>
+        <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 12, fontWeight: 500 }}>Extras que quiero incluir</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {EXTRAS.map((extra) => (
             <button
               key={extra.id}
               onClick={() => toggleExtra(extra.id)}
               style={{
-                padding: '6px 14px', borderRadius: 999, fontSize: 12, cursor: 'pointer',
-                border: activeExtras.includes(extra.id) ? '1px solid #2a6049' : '1px solid #e0ddd6',
+                padding: '7px 16px', borderRadius: 999, fontSize: 13, cursor: 'pointer',
+                border: activeExtras.includes(extra.id) ? '1px solid #2a6049' : '1px solid #e8e5e0',
                 background: activeExtras.includes(extra.id) ? '#eaf4ef' : 'transparent',
                 color: activeExtras.includes(extra.id) ? '#2a6049' : '#6b6760',
+                transition: 'all 0.15s',
               }}
             >
-              {extra.emoji} {extra.label} (+€{extra.amount})
+              {extra.emoji} {extra.label} <span style={{ opacity: 0.6 }}>+€{extra.amount}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Resultado */}
-      <div style={{ background: '#2a6049', borderRadius: 16, padding: 28, color: 'white', textAlign: 'center', marginBottom: 20 }}>
-        <p style={{ fontSize: 12, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+      <div style={{ background: '#2a6049', borderRadius: 20, padding: 36, color: 'white', textAlign: 'center', marginBottom: 20, boxShadow: '0 4px 20px rgba(42,96,73,0.25)' }}>
+        <p style={{ fontSize: 11, opacity: 0.65, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
           Salario bruto anual necesario
         </p>
-        <p style={{ fontSize: 48, fontFamily: 'Georgia, serif', marginBottom: 4 }}>
+        <p style={{ fontSize: 52, fontFamily: 'DM Serif Display, Georgia, serif', marginBottom: 8, letterSpacing: '-0.02em' }}>
           {fmt(grossAnnual)}
         </p>
-        <p style={{ opacity: 0.7 }}>{fmt(netNeeded)}/mes neto · {fmt(base)}/mes en gastos</p>
+        <p style={{ opacity: 0.7, fontSize: 15, marginBottom: 24 }}>
+          {fmt(netNeeded)}/mes neto · {fmt(base)}/mes en gastos
+        </p>
         <button
           onClick={() => setShowSave(true)}
           style={{
-            marginTop: 16, padding: '10px 24px', borderRadius: 999,
+            padding: '12px 28px', borderRadius: 999,
             background: 'white', color: '#2a6049', border: 'none',
             fontWeight: 500, fontSize: 14, cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
           }}
         >
-          Guardar escenario
+          Guardar escenario →
         </button>
       </div>
 
@@ -201,27 +232,45 @@ function App() {
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
+          backdropFilter: 'blur(4px)',
         }}>
-          <div style={{ background: 'white', borderRadius: 20, padding: 32, width: 400 }}>
-            <h2 style={{ fontSize: 22, marginBottom: 8 }}>Guardar escenario</h2>
-            <p style={{ color: '#6b6760', fontSize: 14, marginBottom: 20 }}>Ponle un nombre para identificarlo</p>
+          <div style={{ background: 'white', borderRadius: 24, padding: 36, width: 440, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: 24, marginBottom: 8 }}>Guardar escenario</h2>
+            <p style={{ color: '#6b6760', fontSize: 14, marginBottom: 20 }}>Ponle un nombre para identificarlo después</p>
             <input
               type="text"
               placeholder="Ej: Vida en Madrid sin coche"
               value={scenarioName}
               onChange={(e) => setScenarioName(e.target.value)}
-              style={{ width: '100%', padding: 12, border: '1px solid #e0ddd6', borderRadius: 10, fontSize: 15, marginBottom: 16 }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              autoFocus
+              style={{
+                width: '100%', padding: '12px 16px',
+                border: '1px solid #e8e5e0', borderRadius: 12,
+                fontSize: 15, marginBottom: 16, outline: 'none',
+                color: '#1a1814', background: '#f7f5f0',
+              }}
             />
+            <div style={{ background: '#eaf4ef', borderRadius: 12, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <span style={{ fontSize: 14, color: '#6b6760' }}>Bruto anual necesario</span>
+              <strong style={{ fontSize: 20, color: '#2a6049' }}>{fmt(grossAnnual)}</strong>
+            </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowSave(false)}
-                style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e0ddd6', background: 'transparent', cursor: 'pointer' }}
+                style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e8e5e0', background: 'transparent', cursor: 'pointer', fontSize: 14, color: '#6b6760' }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
-                style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#2a6049', color: 'white', fontWeight: 500, cursor: 'pointer' }}
+                disabled={!scenarioName.trim()}
+                style={{
+                  padding: '10px 24px', borderRadius: 10, border: 'none',
+                  background: scenarioName.trim() ? '#2a6049' : '#e8e5e0',
+                  color: scenarioName.trim() ? 'white' : '#a09d98',
+                  fontWeight: 500, cursor: scenarioName.trim() ? 'pointer' : 'not-allowed', fontSize: 14,
+                }}
               >
                 Guardar
               </button>
@@ -230,18 +279,20 @@ function App() {
         </div>
       )}
 
-      {/* Lista de escenarios guardados */}
+      {/* Lista de escenarios */}
       {scenarios.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 16, padding: 24 }}>
-          <h2 style={{ fontSize: 20, marginBottom: 20 }}>Escenarios guardados</h2>
+        <div style={{ background: 'white', borderRadius: 20, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1814' }}>Escenarios guardados</h2>
           {scenarios.map((s) => (
             <div key={s.id} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '14px 0', borderBottom: '1px solid #f0ede8',
+              padding: '16px 0', borderBottom: '1px solid #f0ede8',
             }}>
               <div>
-                <div style={{ fontWeight: 500 }}>{s.name}</div>
-                <div style={{ fontSize: 13, color: '#6b6760' }}>{fmt(s.grossAnnual)}/año · {fmt(s.netNeeded)}/mes</div>
+                <div style={{ fontWeight: 500, fontSize: 15, marginBottom: 3 }}>{s.name}</div>
+                <div style={{ fontSize: 13, color: '#6b6760' }}>
+                  {fmt(s.grossAnnual)}/año · {fmt(s.netNeeded)}/mes neto
+                </div>
               </div>
               <button
                 onClick={() => uid && deleteScenario(uid, s.id)}

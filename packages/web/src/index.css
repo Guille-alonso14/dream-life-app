@@ -1,13 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: #f7f5f0;
+  color: #1a1814;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+h1, h2, h3 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
 }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #e0ddd6;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2a6049;
+  cursor: pointer;
+  box-shadow: 0 0 0 3px #eaf4ef;
+  transition: box-shadow 0.15s;
+}
+
+input[type=range]:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 5px #d0e9df;
+}
+
+input[type=number] {
+  font-family: 'DM Sans', sans-serif;
+}
+
+button {
+  font-family: 'DM Sans', sans-serif;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e0ddd6; border-radius: 3px; }

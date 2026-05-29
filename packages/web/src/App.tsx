@@ -54,6 +54,7 @@ function App() {
   const [expenses, setExpenses] = useState(DEFAULT_EXPENSES);
   const [savingsPct, setSavingsPct] = useState(10);
   const [investPct, setInvestPct] = useState(5);
+  const [emergencyMonths, setEmergencyMonths] = useState(3);
   const [lifestyle, setLifestyle] = useState<keyof typeof LIFESTYLE_LEVELS>('balanced');
   const [activeExtras, setActiveExtras] = useState<string[]>([]);
   const [uid, setUid] = useState<string | null>(null);
@@ -78,6 +79,9 @@ function App() {
   const totalPct = (savingsPct + investPct) / 100;
   const netNeeded = totalPct < 1 ? base / (1 - totalPct) : base * 2;
   const grossAnnual = (netNeeded * 12) / 0.75;
+  const savingsEur = netNeeded * savingsPct / 100;
+  const emergencyTarget = totalExpenses * emergencyMonths;
+  const monthsToEmergency = savingsEur > 0 ? Math.ceil(emergencyTarget / savingsEur) : null;
 
   const chartData = [
     { name: 'Gastos fijos', value: Math.round(totalExpenses), color: '#2a6049' },
@@ -89,7 +93,6 @@ function App() {
   const compareData = scenarios.slice(0, 6).map((s, i) => ({
     name: s.name.length > 12 ? s.name.slice(0, 10) + '…' : s.name,
     bruto: s.grossAnnual,
-    neto: s.netNeeded,
     color: COLORS[i % COLORS.length],
   }));
 
@@ -98,6 +101,15 @@ function App() {
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
   };
+
+  function handleReset() {
+    setExpenses(DEFAULT_EXPENSES);
+    setSavingsPct(10);
+    setInvestPct(5);
+    setEmergencyMonths(3);
+    setLifestyle('balanced');
+    setActiveExtras([]);
+  }
 
   async function handleSave() {
     if (!uid || !scenarioName.trim()) return;
@@ -115,11 +127,22 @@ function App() {
       <style>{globalStyle}</style>
 
       {/* Header */}
-      <div style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 36, marginBottom: 8 }}>Dream Life Calculator</h1>
-        <p style={{ color: '#6b6760', fontSize: 16, fontWeight: 300 }}>
-          Calcula el salario que necesitas para vivir tu mejor vida
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
+        <div>
+          <h1 style={{ fontSize: 36, marginBottom: 8 }}>Dream Life Calculator</h1>
+          <p style={{ color: '#6b6760', fontSize: 16, fontWeight: 300 }}>
+            Calcula el salario que necesitas para vivir tu mejor vida
+          </p>
+        </div>
+        <button
+          onClick={handleReset}
+          style={{
+            padding: '8px 18px', borderRadius: 999, border: '1px solid #e8e5e0',
+            background: 'transparent', color: '#6b6760', fontSize: 13, cursor: 'pointer',
+          }}
+        >
+          ↺ Restablecer
+        </button>
       </div>
 
       {/* Gastos */}
@@ -149,9 +172,10 @@ function App() {
         </div>
       </div>
 
-      {/* Sliders */}
+      {/* Objetivos financieros */}
       <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: 20, marginBottom: 24 }}>Objetivos financieros</h2>
+
         {[
           { label: 'Ahorro mensual', value: savingsPct, set: setSavingsPct, max: 40, sub: fmt(netNeeded * savingsPct / 100) + '/mes' },
           { label: 'Inversión mensual', value: investPct, set: setInvestPct, max: 30, sub: fmt(netNeeded * investPct / 100) + '/mes' },
@@ -164,12 +188,28 @@ function App() {
               </div>
               <span style={{ fontWeight: 500, color: '#2a6049', fontSize: 16 }}>{value}%</span>
             </div>
-            <input
-              type="range" min={0} max={max} step={1} value={value}
-              onChange={(e) => set(Number(e.target.value))}
-            />
+            <input type="range" min={0} max={max} step={1} value={value} onChange={(e) => set(Number(e.target.value))} />
           </div>
         ))}
+
+        {/* Fondo de emergencia */}
+        <div style={{ borderTop: '1px solid #f0ede8', paddingTop: 20, marginTop: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div>
+              <span style={{ fontSize: 15 }}>Fondo de emergencia</span>
+              <span style={{ fontSize: 12, color: '#a09d98', marginLeft: 8 }}>{fmt(emergencyTarget)} objetivo</span>
+            </div>
+            <span style={{ fontWeight: 500, color: '#b07d3a', fontSize: 16 }}>{emergencyMonths} meses</span>
+          </div>
+          <input type="range" min={1} max={12} step={1} value={emergencyMonths} onChange={(e) => setEmergencyMonths(Number(e.target.value))}
+            style={{ accentColor: '#b07d3a' } as any}
+          />
+          {monthsToEmergency && (
+            <p style={{ fontSize: 12, color: '#a09d98', marginTop: 6 }}>
+              A este ritmo de ahorro lo conseguirías en <strong style={{ color: '#b07d3a' }}>{monthsToEmergency} meses</strong>
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Estilo de vida */}
@@ -345,7 +385,7 @@ function App() {
         </div>
       )}
 
-      {/* Comparativa de escenarios */}
+      {/* Comparativa */}
       {scenarios.length >= 2 && (
         <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Comparativa de escenarios</h2>

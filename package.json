@@ -1,0 +1,21 @@
+{
+  "name": "dream-life-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/web",
+    "packages/mobile"
+  ],
+  "scripts": {
+    "web": "yarn workspace @dream-life/web start",
+    "mobile": "yarn workspace @dream-life/mobile start",
+    "build:web": "yarn workspace @dream-life/web build"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "firebase": "^12.13.0"
+  }
+}

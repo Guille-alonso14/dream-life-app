@@ -1,0 +1,9 @@
+{
+  "name": "@dream-life/shared",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "firebase": "^10.7.0"
+  }
+}

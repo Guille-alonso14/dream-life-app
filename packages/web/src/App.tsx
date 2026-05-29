@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initAuth, saveScenario, subscribeScenarios, deleteScenario } from './firebase';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const globalStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
@@ -46,6 +46,8 @@ const EXTRAS = [
   { id: 'gym', label: 'Gimnasio', amount: 60, emoji: '🏋️' },
 ];
 
+const COLORS = ['#2a6049', '#6ba88a', '#b07d3a', '#7b6fca', '#c0392b', '#2980b9'];
+
 const fmt = (v: number) => '€' + Math.round(v).toLocaleString('es-ES');
 
 function App() {
@@ -83,6 +85,13 @@ function App() {
     { name: 'Ahorro', value: Math.round(netNeeded * savingsPct / 100), color: '#6ba88a' },
     { name: 'Inversión', value: Math.round(netNeeded * investPct / 100), color: '#7b6fca' },
   ].filter(d => d.value > 0);
+
+  const compareData = scenarios.slice(0, 6).map((s, i) => ({
+    name: s.name.length > 12 ? s.name.slice(0, 10) + '…' : s.name,
+    bruto: s.grossAnnual,
+    neto: s.netNeeded,
+    color: COLORS[i % COLORS.length],
+  }));
 
   const toggleExtra = (id: string) => {
     setActiveExtras(prev =>
@@ -230,21 +239,13 @@ function App() {
         </button>
       </div>
 
-      {/* Gráfica */}
+      {/* Gráfica distribución */}
       <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <h2 style={{ fontSize: 20, marginBottom: 24 }}>Distribución del salario neto</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'center' }}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                paddingAngle={3}
-                dataKey="value"
-              >
+              <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
                 {chartData.map((entry, index) => (
                   <Cell key={index} fill={entry.color} />
                 ))}
@@ -343,6 +344,28 @@ function App() {
           ))}
         </div>
       )}
+
+      {/* Comparativa de escenarios */}
+      {scenarios.length >= 2 && (
+        <div style={{ background: 'white', borderRadius: 20, padding: 28, marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Comparativa de escenarios</h2>
+          <p style={{ fontSize: 13, color: '#6b6760', marginBottom: 24 }}>Salario bruto anual por escenario</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={compareData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0ede8" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b6760' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: '#6b6760' }} axisLine={false} tickLine={false} tickFormatter={(v) => '€' + (v / 1000) + 'k'} />
+              <Tooltip formatter={(value: any) => [fmt(Number(value)), 'Bruto anual']} />
+              <Bar dataKey="bruto" radius={[6, 6, 0, 0]}>
+                {compareData.map((entry, index) => (
+                  <Cell key={index} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
     </div>
   );
 }

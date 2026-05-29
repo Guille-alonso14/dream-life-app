@@ -1,46 +1,63 @@
-# Getting Started with Create React App
+# Dream Life Calculator 🌿
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Microapp para calcular el salario que necesitas para vivir tu vida ideal.
 
-## Available Scripts
+## 🌐 Demo
+👉 https://dream-life-app-59679.web.app
 
-In the project directory, you can run:
+## 🛠️ Stack
 
-### `npm start`
+- **React.js** — app web
+- **React Native + Expo** — app móvil
+- **Firebase Realtime Database** — base de datos en tiempo real
+- **Firebase Auth** — autenticación anónima
+- **Firebase Hosting** — despliegue web
+- **TypeScript** — tipado estático
+- **Recharts** — gráficas
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## ✨ Funcionalidades
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Layout dos columnas con resultado fijo
+- Calculadora de gastos mensuales
+- Sliders de ahorro e inversión
+- Fondo de emergencia con estimación de tiempo
+- Botón restablecer valores
+- Selector de estilo de vida (equilibrado, confortable, premium)
+- Extras personalizables (viajes, gimnasio, restaurantes...)
+- Gráfica de distribución del salario
+- Comparativa de escenarios con barras
+- Guardar y eliminar escenarios en Firebase
+- Sincronización en tiempo real web y móvil
+- App móvil con navegación por 3 pestañas
 
-### `npm test`
+## 🚀 Cómo arrancarlo
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Web
+    cd packages/web
+    npm start
 
-### `npm run build`
+### Móvil
+    cd packages/mobile
+    npm start
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Escanea el QR con Expo Go en tu móvil.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 📁 Estructura
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    dream-life-app/
+    ├── packages/
+    │   ├── shared/     → Lógica compartida
+    │   ├── web/        → App React.js
+    │   └── mobile/     → App React Native + Expo
+    └── firebase/       → Reglas de seguridad
 
-### `npm run eject`
+## 🗺️ Roadmap
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- [ ] Login con Google
+- [ ] Publicar en Google Play
+- [ ] Modo oscuro
+- [ ] Notificaciones push
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔧 Configuración Firebase
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Crea packages/web/.env.local con tu configuración de Firebase.

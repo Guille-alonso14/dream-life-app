@@ -1,8 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput,
-  TouchableOpacity, StyleSheet, SafeAreaView,
+  TouchableOpacity, StyleSheet, SafeAreaView, Modal, Alert,
 } from 'react-native';
+import { initializeApp, getApps } from 'firebase/app';
+import { getDatabase, ref, push, set, onValue, remove } from 'firebase/database';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAHKK1BKX96F31yzWKseQOTd6GxstaMvUs",
+  authDomain: "dream-life-app-59679.firebaseapp.com",
+  databaseURL: "https://dream-life-app-59679-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "dream-life-app-59679",
+  storageBucket: "dream-life-app-59679.firebasestorage.app",
+  messagingSenderId: "750003342321",
+  appId: "1:750003342321:web:e0a4d76582110656391250"
+};
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getDatabase(app);
+const auth = getAuth(app);
 
 const DEFAULT_EXPENSES = {
   housing: 1200,
@@ -45,6 +63,28 @@ export default function App() {
   const [investPct, setInvestPct] = useState(5);
   const [lifestyle, setLifestyle] = useState<keyof typeof LIFESTYLE_LEVELS>('balanced');
   const [activeExtras, setActiveExtras] = useState<string[]>([]);
+  const [uid, setUid] = useState<string | null>(null);
+  const [scenarios, setScenarios] = useState<any[]>([]);
+  const [scenarioName, setScenarioName] = useState('');
+  const [showSave, setShowSave] = useState(false);
+
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUid(user.uid);
+        const scenariosRef = ref(db, `users/${user.uid}/scenarios`);
+        onValue(scenariosRef, (snap) => {
+          if (!snap.exists()) { setScenarios([]); return; }
+          const data = snap.val();
+          const list = Object.entries(data).map(([id, val]: any) => ({ id, ...val }));
+          setScenarios(list.sort((a, b) => b.createdAt - a.createdAt));
+        });
+      } else {
+        signInAnonymously(auth);
+      }
+    });
+    return unsubAuth;
+  }, []);
 
   const totalExpenses = Object.values(expenses).reduce((s, v) => s + v, 0);
   const lifestyleExtra = LIFESTYLE_LEVELS[lifestyle].extra;
@@ -63,6 +103,27 @@ export default function App() {
     );
   };
 
+  async function handleSave() {
+    if (!uid || !scenarioName.trim()) return;
+    const scenariosRef = ref(db, `users/${uid}/scenarios`);
+    const newRef = push(scenariosRef);
+    await set(newRef, {
+      name: scenarioName.trim(),
+      grossAnnual: Math.round(grossAnnual),
+      netNeeded: Math.round(netNeeded),
+      createdAt: Date.now(),
+    });
+    setScenarioName('');
+    setShowSave(false);
+  }
+
+  function handleDelete(scenarioId: string, name: string) {
+    Alert.alert('Eliminar', `¿Eliminar "${name}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: () => uid && remove(ref(db, `users/${uid}/scenarios/${scenarioId}`)) },
+    ]);
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
@@ -76,6 +137,9 @@ export default function App() {
           <Text style={styles.heroLabel}>SALARIO BRUTO ANUAL</Text>
           <Text style={styles.heroValue}>{fmt(grossAnnual)}</Text>
           <Text style={styles.heroSub}>{fmt(netNeeded)}/mes neto</Text>
+          <TouchableOpacity style={styles.saveBtn} onPress={() => setShowSave(true)}>
+            <Text style={styles.saveBtnText}>Guardar escenario →</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Gastos */}
@@ -166,7 +230,59 @@ export default function App() {
           </View>
         </View>
 
+        {/* Escenarios guardados */}
+        {scenarios.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Escenarios guardados</Text>
+            {scenarios.map((s) => (
+              <View key={s.id} style={styles.scenarioRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.scenarioName}>{s.name}</Text>
+                  <Text style={styles.scenarioSub}>{fmt(s.grossAnnual)}/año · {fmt(s.netNeeded)}/mes</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDelete(s.id, s.name)}>
+                  <Text style={styles.deleteBtn}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+
       </ScrollView>
+
+      {/* Modal guardar */}
+      <Modal visible={showSave} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>Guardar escenario</Text>
+            <Text style={styles.modalSub}>Ponle un nombre para identificarlo</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ej: Vida en Madrid sin coche"
+              value={scenarioName}
+              onChangeText={setScenarioName}
+              autoFocus
+            />
+            <View style={styles.modalResult}>
+              <Text style={styles.modalResultLabel}>Bruto anual</Text>
+              <Text style={styles.modalResultValue}>{fmt(grossAnnual)}</Text>
+            </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowSave(false)}>
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmBtn, !scenarioName.trim() && { opacity: 0.5 }]}
+                onPress={handleSave}
+                disabled={!scenarioName.trim()}
+              >
+                <Text style={styles.confirmBtnText}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -183,7 +299,9 @@ const styles = StyleSheet.create({
   },
   heroLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: 1, marginBottom: 8 },
   heroValue: { fontSize: 42, fontWeight: '300', color: 'white', marginBottom: 4 },
-  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.65)' },
+  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.65)', marginBottom: 20 },
+  saveBtn: { backgroundColor: 'white', borderRadius: 999, paddingHorizontal: 24, paddingVertical: 10 },
+  saveBtnText: { color: '#2a6049', fontWeight: '500', fontSize: 14 },
   card: {
     backgroundColor: 'white', borderRadius: 16, padding: 20,
     marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.05,
@@ -223,4 +341,33 @@ const styles = StyleSheet.create({
   tagActive: { backgroundColor: '#eaf4ef', borderColor: '#2a6049' },
   tagText: { fontSize: 13, color: '#6b6760' },
   tagTextActive: { color: '#2a6049' },
+  scenarioRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0ede8',
+  },
+  scenarioName: { fontSize: 15, fontWeight: '500', color: '#1a1814', marginBottom: 2 },
+  scenarioSub: { fontSize: 13, color: '#6b6760' },
+  deleteBtn: { fontSize: 13, color: '#a09d98' },
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+  modal: { backgroundColor: 'white', borderRadius: 24, padding: 28, width: '100%' },
+  modalTitle: { fontSize: 22, fontWeight: '400', color: '#1a1814', marginBottom: 6 },
+  modalSub: { fontSize: 14, color: '#6b6760', marginBottom: 16 },
+  modalInput: {
+    borderWidth: 1, borderColor: '#e8e5e0', borderRadius: 12,
+    padding: 12, fontSize: 15, color: '#1a1814', marginBottom: 16,
+  },
+  modalResult: {
+    backgroundColor: '#eaf4ef', borderRadius: 12, padding: 14,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20,
+  },
+  modalResultLabel: { fontSize: 14, color: '#6b6760' },
+  modalResultValue: { fontSize: 20, fontWeight: '500', color: '#2a6049' },
+  modalActions: { flexDirection: 'row', gap: 10, justifyContent: 'flex-end' },
+  cancelBtn: { borderWidth: 1, borderColor: '#e8e5e0', borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10 },
+  cancelBtnText: { fontSize: 14, color: '#6b6760' },
+  confirmBtn: { backgroundColor: '#2a6049', borderRadius: 10, paddingHorizontal: 22, paddingVertical: 10 },
+  confirmBtnText: { fontSize: 14, color: 'white', fontWeight: '500' },
 });
